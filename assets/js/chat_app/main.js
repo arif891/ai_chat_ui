@@ -2,8 +2,9 @@ import { ChatConfig } from './core/ChatConfig.js';
 import { DatabaseManager } from './core/DatabaseManager.js';
 import { ChatUI } from './ui/ChatUI.js';
 import { ChatService } from './core/ChatService.js';
-import { DOMUtils, copyToClipboard } from './utils/utils.js';
+import { DOMUtils, copyToClipboard, FileUtils } from './utils/utils.js';
 import { MarkdownUtils } from './utils/MarkdownUtils.js';
+import { TemplateUtils } from './utils/TemplateUtils.js';
 import { ModelManager } from './core/ModelManager.js';
 import { SettingsManager } from './core/SettingsManager.js';
 import { SearchManager } from './core/SearchManager.js';
@@ -140,7 +141,7 @@ class ChatApplication {
   async processChat(editedContent = null, files = null) {
     try {
       let userContent = editedContent || this.ui.textarea.value.trim();
-      if (!userContent || DOMUtils.hasClass(this.ui.root, 'generating')) return;
+      if (!userContent && !this.ui.getAttachedFile() || DOMUtils.hasClass(this.ui.root, 'generating')) return;
 
       this.ui.textarea.value = '';
       DOMUtils.addClass(this.ui.root, 'generating');
@@ -155,14 +156,70 @@ class ChatApplication {
 
       DOMUtils.removeClass(this.ui.root, 'initial');
 
-      // Render the user message and add a placeholder for the assistant
-      this.ui.renderMessage(userContent, 'user');
+      // Build message content with files if attached
+      let messageContent = userContent;
+      let messageToSave = { role: 'user', content: userContent };
+      let previewItemsHTML = '';
+
+      const attachedFile = this.ui.getAttachedFile();
+      if (attachedFile) {
+        // Prepare content array for API based on file type
+        const contentArray = [];
+
+        if (FileUtils.isImageFile(attachedFile)) {
+          // Handle image file - pass File object directly
+          // Add text content first
+          if (userContent) {
+            contentArray.push({
+              type: 'text',
+              value: userContent,
+            });
+          }
+          
+          contentArray.push({
+            type: 'image',
+            value: attachedFile,
+          });
+          messageContent = contentArray;
+
+          // Generate preview for image - wait for file read to complete
+          const base64Image = await FileUtils.readFileAsBase64(attachedFile);
+          const previewItems = [{ url: base64Image }];
+          previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'image');
+        } else if (FileUtils.isTextFile(attachedFile)) {
+          // Handle text file - combine filename and content with userContent as single text item
+          const fileContent = await FileUtils.readFileAsText(attachedFile);
+          const combinedContent = `FILE ATTACHED: ${attachedFile.name}
+---FILE CONTENT START---
+${fileContent}
+---FILE CONTENT END---
+
+USER MESSAGE:
+${userContent}`;
+          
+          contentArray.push({
+            type: 'text',
+            value: combinedContent,
+          });
+          messageContent = contentArray;
+
+          // Generate preview for text file
+          const previewItems = [{ name: attachedFile.name }];
+          previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'file');
+        }
+
+        messageToSave = { role: 'user', content: messageContent };
+        this.ui.clearAttachedFile();
+      }
+
+      // Render the user message with file preview and add a placeholder for the assistant
+      this.ui.renderMessage(userContent, 'user', previewItemsHTML);
       this.ui.renderMessage('', 'assistant');
       this.ui.scrollToBottom();
 
       // Save the user message to the DB and update the conversation context
-      await this.dbManager.addMessage(this.sessionId, { role: 'user', content: userContent });
-      this.context.push({ role: 'user', content: userContent });
+      await this.dbManager.addMessage(this.sessionId, messageToSave);
+      this.context.push({ role: 'user', content: messageContent });
 
       // Get the assistant response element for streaming updates
       const lastAssistantBlock = this.ui.contentContainer.querySelector(
@@ -258,10 +315,34 @@ class ChatApplication {
       const conversationInfo = await this.dbManager.db.get(this.config.stores.conversations.name, this.sessionId);
       if (conversationInfo.messages.length) {
         for (const message of conversationInfo.messages) {
+          let previewItemsHTML = '';
+
+          // Generate preview items if message has array content (with files)
+          if (Array.isArray(message.content)) {
+            const imageItem = message.content.find(item => item.type === 'image');
+            const fileNameMatch = message.content.find(item => 
+              item.type === 'text' && item.value.includes('[File:')
+            );
+
+            if (imageItem && imageItem.value instanceof Blob) {
+              // For blob/file objects, convert to data URL
+              const base64Image = await FileUtils.readFileAsBase64(imageItem.value);
+              const previewItems = [{ url: base64Image }];
+              previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'image');
+            } else if (fileNameMatch) {
+              // Extract filename from text
+              const match = fileNameMatch.value.match(/\[File: ([^\]]+)\]/);
+              if (match) {
+                const previewItems = [{ name: match[1] }];
+                previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'file');
+              }
+            }
+          }
+
           if (message.role === 'assistant') {
             this.ui.renderMessage(MarkdownUtils.parseMarkdown(message.content), message.role);
           } else {
-            this.ui.renderMessage(message.content, message.role);
+            this.ui.renderMessage(message.content, message.role, previewItemsHTML);
           }
         }
         this.ui.scrollToBottom();

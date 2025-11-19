@@ -109,6 +109,15 @@ export class ChatUI {
       }
     });
 
+    // File attachment events
+    this.attachFileButton.addEventListener('click', () => {
+      this.fileInput.click();
+    });
+
+    this.fileInput.addEventListener('change', (e) => {
+      this.handleFileSelect(e);
+    });
+
     this.contentScrollContainer.addEventListener('scroll', debounce(() => this.updateScrollState()), { passive: true });
 
     this.scrollButton.addEventListener('click', () => {
@@ -215,10 +224,23 @@ export class ChatUI {
 
 
 
-  renderMessage(content, role) {
+  renderMessage(content, role, previewItems = '') {
     // Sanitize user input if needed and generate HTML for the message block
-    const finalContent = role === 'user' ? sanitizeInput(content) : content;
-    const messageHTML = TemplateUtils.generateMessageBlock(finalContent, role);
+    let finalContent = content;
+    
+    // Handle array content (messages with files)
+    if (Array.isArray(content)) {
+      // Extract text content from array
+      const textItem = content.find(item => item.type === 'text');
+      finalContent = textItem ? textItem.value : '';
+    }
+    
+    // Sanitize only string content for user messages
+    if (role === 'user' && typeof finalContent === 'string') {
+      finalContent = sanitizeInput(finalContent);
+    }
+    
+    const messageHTML = TemplateUtils.generateMessageBlock(finalContent, role, previewItems);
     DOMUtils.insertHTML(this.contentContainer, 'beforeend', messageHTML);
   }
 
@@ -346,5 +368,64 @@ export class ChatUI {
     blocks.slice(index).forEach(block => {
       DOMUtils.removeElement(block);
     });
+  }
+
+  handleFileSelect(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    // Clear previous files
+    this.filePreviewContainer.innerHTML = '';
+    this.attachedFile = null;
+
+    // Handle first file only
+    const file = files[0];
+    this.attachedFile = file;
+
+    const preview = this.createFilePreview(file);
+    this.filePreviewContainer.appendChild(preview);
+
+    // Reset file input
+    this.fileInput.value = '';
+  }
+
+  createFilePreview(file) {
+    const container = document.createElement('div');
+    container.className = 'file-preview';
+
+    const fileInfo = document.createElement('div');
+    fileInfo.className = 'file-info';
+
+    const fileName = document.createElement('span');
+    fileName.className = 'file-name';
+    fileName.textContent = file.name;
+
+    const fileSize = document.createElement('span');
+    fileSize.className = 'file-size';
+    fileSize.textContent = `${(file.size / 1024).toFixed(2)} KB`;
+
+    const removeButton = document.createElement('button');
+    removeButton.className = 'file-remove-btn';
+    removeButton.textContent = '✕';
+    removeButton.addEventListener('click', () => {
+      this.attachedFile = null;
+      this.filePreviewContainer.innerHTML = '';
+    });
+
+    fileInfo.appendChild(fileName);
+    fileInfo.appendChild(fileSize);
+    fileInfo.appendChild(removeButton);
+    container.appendChild(fileInfo);
+
+    return container;
+  }
+
+  getAttachedFile() {
+    return this.attachedFile;
+  }
+
+  clearAttachedFile() {
+    this.attachedFile = null;
+    this.filePreviewContainer.innerHTML = '';
   }
 }

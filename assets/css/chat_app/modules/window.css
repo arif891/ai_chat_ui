@@ -230,10 +230,25 @@
                             .preview__wrapper {
                                 display: flex;
                                 gap: var(--space);
+                                flex-wrap: wrap;
 
-                                img {
-                                    max-width: 100%;
-                                    border-radius: var(--radius);
+                                .preview__item {
+                                    &--image {
+                                        max-width: 100%;
+                                        border-radius: var(--radius);
+                                        max-height: 300px;
+                                        object-fit: cover;
+                                    }
+
+                                    &--file {
+                                        display: inline-block;
+                                        padding: 0.5rem 1rem;
+                                        background-color: var(--surface-2-color);
+                                        border-radius: var(--radius);
+                                        font-size: 0.875rem;
+                                        border: 1px solid var(--border-color);
+                                        word-break: break-word;
+                                    }
                                 }
 
                                 &:empty {

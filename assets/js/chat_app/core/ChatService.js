@@ -11,7 +11,7 @@ export class ChatService {
         const availability = await LanguageModel.availability();
         if (availability === 'available') {
             this.isSupported = true;
-            this.aiSession =  await LanguageModel.create();
+            this.aiSession =  await LanguageModel.create({expectedInputs: [{type: 'text', type: 'image' }]});
             return true;
         }
         return false;
@@ -56,16 +56,47 @@ export class ChatService {
             if (!this.isSupported || !this.aiSession) {
                 throw new Error("Chrome AI is not supported or initialized.");
             }
-            const prompt = this.formatPrompt(options.messages);
             const session = await this._getClonedSession(sessionId);
-            const stream = await session.promptStreaming(prompt, { signal, temperature: options.options?.temperature });
-
-            for await (const chunk of stream) {
-                yield {
-                    message: {
-                        content: chunk
+            
+            // Check if any message has content array (with file objects)
+            const hasFileContent = options.messages.some(msg => Array.isArray(msg.content));
+            
+            if (hasFileContent) {
+                // Use append() method for messages with files
+                for (const message of options.messages) {
+                    if (Array.isArray(message.content)) {
+                        // Message with file content
+                        await session.append([message]);
+                    } else if (message.role !== 'system') {
+                        // Regular text message (skip system messages as they're handled in initialPrompts)
+                        await session.append([{
+                            role: message.role,
+                            content: [{ type: 'text', value: message.content }]
+                        }]);
                     }
-                };
+                }
+                
+                // Get the stream response
+                const stream = await session.promptStreaming('', { signal, temperature: options.options?.temperature });
+                for await (const chunk of stream) {
+                    yield {
+                        message: {
+                            content: chunk
+                        }
+                    };
+                }
+            } else {
+                // Original behavior for text-only messages
+                const prompt = this.formatPrompt(options.messages);
+                const stream = await session.promptStreaming(prompt, { signal, temperature: options.options?.temperature });
+
+                for await (const chunk of stream) {
+                    yield {
+                        message: {
+                            content: chunk
+                        }
+                    };
+                }
             }
         } catch (error) {
             if (error.name === 'AbortError') {

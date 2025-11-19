@@ -79,3 +79,40 @@ export function sanitizeInput(input) {
       console.error('Failed to copy text:', error);
     }
   }   
+
+export class FileUtils {
+  static isImageFile(file) {
+    return file.type.startsWith('image/');
+  }
+
+  static isTextFile(file) {
+    return file.type.startsWith('text/') || 
+           file.name.endsWith('.txt') || 
+           file.name.endsWith('.md') ||
+           file.name.endsWith('.json') ||
+           file.name.endsWith('.csv');
+  }
+
+  static async readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result;
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  static async readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve(reader.result);
+      };
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  }
+}
