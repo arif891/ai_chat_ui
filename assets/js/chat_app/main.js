@@ -25,7 +25,7 @@ class ChatApplication {
     this.aiOptions = {};
     this.systemPrompt = this.config.ai.system;
     this.model = '';
-    this.modelList = []; 
+    this.modelList = [];
 
     this.initialize();
     this.registerEvents();
@@ -47,12 +47,6 @@ class ChatApplication {
       history.replaceState({ type: 'new' }, null, window.location.pathname);
     }
 
-    const aiInitialized = await this.chatService.initialize();
-    if (!aiInitialized) {
-      this.ui.addSystemMessage('Chrome AI is not available. Please enable it in chrome://flags/#prompt-api-for-gemini-nano and chrome://flags/#optimization-guide-on-device-model.');
-      console.warn('Could not initialize window.ai. The app may not function correctly.');
-    }
-
     const dbInitialized = await this.dbManager.initialize();
     if (dbInitialized) {
       await this.loadChatHistory();
@@ -62,8 +56,14 @@ class ChatApplication {
       await this.displayChatHistory(sessionIdFromUrl);
     }
 
+    const aiInitialized = await this.chatService.initialize();
+    if (!aiInitialized) {
+      this.ui.addSystemMessage('Chrome AI is not available. Please enable it in chrome://flags/#prompt-api-for-gemini-nano and chrome://flags/#optimization-guide-on-device-model.');
+      console.warn('Could not initialize window.ai. The app may not function correctly.');
+    }
     await this.loadModels();
     this.updateTokenUsage();
+
   }
 
   registerEvents() {
@@ -99,7 +99,7 @@ class ChatApplication {
       const { sessionId, title } = e.detail;
       if (!sessionId || !title) return;
       await this.dbManager.updateChatHistoryTitle(sessionId, title);
-      
+
       // Update document title if this is the current session
       if (this.sessionId === Number(sessionId)) {
         document.title = title;
@@ -120,13 +120,13 @@ class ChatApplication {
 
     this.ui.root.addEventListener('regenerate-message', async (e) => {
       const { messageBlock, messageIndex } = e.detail;
-      
+
       // Get the last user message
       const userBlock = this.ui.contentContainer.children[messageIndex - 1];
       const userContent = userBlock.querySelector('.message').textContent;
 
       this.ui.removeBlocksAfter(messageIndex - 1); // Remove from the user message
-      
+
       // Refresh context to exclude removed messages
       const conversationInfo = await this.dbManager.db.get(this.config.stores.conversations.name, this.sessionId);
       const updatedMessages = conversationInfo.messages.slice(0, [messageIndex - 1]);
@@ -364,7 +364,6 @@ class ChatApplication {
 
   async updateTokenUsage() {
     const session = await this.chatService.getSession(this.sessionId);
-    console.log(session);
     if (session && typeof session.inputQuota === 'number') {
       const available = session.inputQuota;
       const used = session.inputUsage;
