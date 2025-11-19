@@ -145,4 +145,8 @@ export class ChatService {
             console.log(`Destroyed inactive AI session for chat session ID: ${sessionId}`);
         }, 5 * 60 * 1000); // 5 minutes
     }
+
+    async getSession(sessionId) {
+        return await this._getClonedSession(sessionId) ?? this.aiSession;
+    }
 }

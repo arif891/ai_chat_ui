@@ -63,6 +63,7 @@ class ChatApplication {
     }
 
     await this.loadModels();
+    this.updateTokenUsage();
   }
 
   registerEvents() {
@@ -204,7 +205,7 @@ class ChatApplication {
         }
       }
 
-      
+      this.updateTokenUsage();
 
       // Update context if necessary
       if (this.context.length >= this.maxContext) {
@@ -230,6 +231,7 @@ class ChatApplication {
 
     // Push new history state
     history.pushState({ type: 'new' }, null, window.location.pathname);
+    this.updateTokenUsage();
   }
 
   async loadChatHistory() {
@@ -275,6 +277,8 @@ class ChatApplication {
       if (historyItem) {
         this.ui.setActiveHistoryItem(historyItem);
       }
+
+      this.updateTokenUsage();
     } catch (error) {
       console.error('Error displaying chat history:', error);
     }
@@ -355,6 +359,18 @@ class ChatApplication {
 
     } catch (error) {
       console.error('Error saving edit:', error);
+    }
+  }
+
+  async updateTokenUsage() {
+    const session = await this.chatService.getSession(this.sessionId);
+    console.log(session);
+    if (session && typeof session.inputQuota === 'number') {
+      const available = session.inputQuota;
+      const used = session.inputUsage;
+      this.ui.root.style.setProperty('--available', available);
+      this.ui.root.style.setProperty('--used', used);
+      this.ui.root.style.setProperty('--left', available - used);
     }
   }
 }

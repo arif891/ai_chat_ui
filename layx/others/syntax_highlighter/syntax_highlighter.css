@@ -1,7 +1,6 @@
 [data-code-lang] {
 	--padding: 1rem;
 	font-family: monospace;
-	font-size: 1rem;
 	line-height: 1.5;
 	max-width: 100%;
 	overflow-x: auto;
@@ -59,6 +58,7 @@
 	.code {
 		color: inherit;
 		font: inherit;
+		font-size: .95rem;
 	}
 
 	.copy {
