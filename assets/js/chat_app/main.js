@@ -137,7 +137,7 @@ class ChatApplication {
     });
   }
 
-  async processChat(editedContent = null) {
+  async processChat(editedContent = null, files = null) {
     try {
       let userContent = editedContent || this.ui.textarea.value.trim();
       if (!userContent || DOMUtils.hasClass(this.ui.root, 'generating')) return;

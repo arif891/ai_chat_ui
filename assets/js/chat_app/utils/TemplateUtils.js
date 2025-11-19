@@ -1,16 +1,19 @@
 export class TemplateUtils {
-  static generateMessageBlock(content, role) {
+  static generateMessageBlock(content, role, previewItems = '') {
     switch (role) {
       case 'user':
         return `<div class="chat__block user" data-role="${role}">
-                  <div class="actions__wrapper">
-                    <button class="action__button edit" title="Edit message">
-                      <svg class="icon">
-                        <use href="/assets/image/svg/icons.svg#edit-icon" />
-                      </svg>
-                    </button>
+                  <div class="preview__wrapper">${previewItems}</div>
+                  <div class="message__wrapper">
+                      <div class="actions__wrapper">
+                        <button class="action__button edit" title="Edit message">
+                          <svg class="icon">
+                            <use href="/assets/image/svg/icons.svg#edit-icon" />
+                          </svg>
+                        </button>
+                      </div>
+                      <span class="message">${content}</span>
                   </div>
-                  <span class="message">${content}</span>
                 </div>`;
       case 'assistant':
         return `<div class="chat__block assistant" data-role="${role}">

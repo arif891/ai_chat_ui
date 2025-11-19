@@ -167,7 +167,7 @@
                                     opacity: .75;
 
                                     &::after {
-                                        counter-reset: available var(--available,0) used var(--used,0) left var(--left,0);
+                                        counter-reset: available var(--available, 0) used var(--used, 0) left var(--left, 0);
                                     }
 
                                     .available &::after {
@@ -225,13 +225,26 @@
                         gap: var(--space);
 
                         &.user {
-                            &:not(.editing) {
-                                justify-content: end;
+                            flex-direction: column;
 
-                                @media (width >=992px) {
-                                    padding-left: 15%;
+                            .preview__wrapper {
+
+                                &:empty {
+                                 display: none;
                                 }
                             }
+
+                            .message__wrapper {
+                                display: flex;
+                                &:not(.editing) {
+                                    justify-content: end;
+
+                                    @media (width >=992px) {
+                                        padding-left: 15%;
+                                    }
+                                }
+                            }
+
 
                             .message {
                                 padding: .75rem 1.25rem;
