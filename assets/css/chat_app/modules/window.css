@@ -97,7 +97,8 @@
                                 text-align: left;
                                 background-color: transparent;
 
-                                &:hover, &:focus-within {
+                                &:hover,
+                                &:focus-within {
                                     background-color: rgb(from var(--bg-color) r g b / 50%);
                                 }
 
@@ -111,6 +112,74 @@
 
                                     &.info {
                                         font-size: .9rem;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    .quota__info__wrapper {
+                        display: flex;
+                        position: relative;
+                        height: fit-content;
+
+
+                        .quota__info__main {
+                            position: absolute;
+                            top: calc(100% + var(--space));
+                            right: 0;
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: var(--space);
+                            padding: var(--space);
+                            min-width: 200px;
+                            max-height: 20rem;
+                            overflow: auto;
+                            border-radius: var(--radius);
+                            background-color: var(--surface-3-color);
+                            opacity: 0;
+                            visibility: hidden;
+                            transition: .3s;
+
+                            .quota__info__wrapper:is(:hover, :focus, :focus-within) & {
+                                opacity: 1;
+                                visibility: visible;
+                            }
+
+                            .info__block {
+                                display: flex;
+                                flex-direction: column;
+                                flex-grow: 1;
+                                background-color: var(--bg-color);
+                                padding: var(--space);
+
+                                span {
+                                    line-height: 1;
+                                }
+
+                                .title {
+                                    font-size: .75rem;
+                                    opacity: .5;
+                                }
+
+                                .number {
+                                    font-size: 1.25rem;
+                                    opacity: .75;
+
+                                    &::after {
+                                        counter-reset: available var(--available,0) used var(--used,0) left var(--left,0);
+                                    }
+
+                                    .available &::after {
+                                        content: counter(available);
+                                    }
+
+                                    .used &::after {
+                                        content: counter(used);
+                                    }
+
+                                    .left &::after {
+                                        content: counter(left);
                                     }
                                 }
                             }

@@ -25,7 +25,7 @@ class ChatApplication {
     this.aiOptions = {};
     this.systemPrompt = this.config.ai.system;
     this.model = '';
-    this.modelList = [];
+    this.modelList = []; 
 
     this.initialize();
     this.registerEvents();
@@ -36,11 +36,21 @@ class ChatApplication {
       this.handleUrlChange(event);
     });
 
+    window.addEventListener('beforeunload', () => {
+      this.chatService.destroy();
+    });
+
     const sessionIdFromUrl = this.getSessionIdFromUrl();
     if (sessionIdFromUrl) {
       history.replaceState({ type: 'chat', sessionId: sessionIdFromUrl }, null, `?session=${sessionIdFromUrl}`);
     } else {
       history.replaceState({ type: 'new' }, null, window.location.pathname);
+    }
+
+    const aiInitialized = await this.chatService.initialize();
+    if (!aiInitialized) {
+      this.ui.addSystemMessage('Chrome AI is not available. Please enable it in chrome://flags/#prompt-api-for-gemini-nano and chrome://flags/#optimization-guide-on-device-model.');
+      console.warn('Could not initialize window.ai. The app may not function correctly.');
     }
 
     const dbInitialized = await this.dbManager.initialize();
@@ -120,7 +130,7 @@ class ChatApplication {
       const conversationInfo = await this.dbManager.db.get(this.config.stores.conversations.name, this.sessionId);
       const updatedMessages = conversationInfo.messages.slice(0, [messageIndex - 1]);
       await this.refreshContext(updatedMessages, this.maxContext);
-      
+
       // Process the user message again
       await this.processChat(userContent);
     });
@@ -159,13 +169,13 @@ class ChatApplication {
       );
 
       // Stream the assistant response
-      const responseStream = this.chatService.streamChat({
+      const responseStream = this.chatService.streamChat(this.sessionId, {
         model: this.model,
         messages: [
           { role: 'system', content: this.systemPrompt },
           ...this.context
         ],
-        options: this.aiOptions
+        options: { temperature: this.settingsManager.getSetting('chat', 'temperature') }
       });
 
       const parser = MarkdownUtils.getParser(lastAssistantBlock);
@@ -182,17 +192,19 @@ class ChatApplication {
       await this.dbManager.addMessage(this.sessionId, { role: 'assistant', content: assistantContent });
       this.context.push({ role: 'assistant', content: assistantContent });
 
+      this.ui.scrollToBottom();
+
       // If this is a new session, update the chat history title
       if (isNewSession) {
-        const updatedTitle = await this.chatService.getTitle(this.model, userContent);
+        const updatedTitle = await this.chatService.getTitle(this.sessionId, userContent);
         if (updatedTitle) {
           const historyItem = this.ui.chatHistoryContainer.querySelector(`.item[data-session-id="${this.sessionId}"] .title`);
-          if (historyItem) {
-            historyItem.textContent = updatedTitle;
-          }
+          if (historyItem) historyItem.textContent = updatedTitle;
           await this.dbManager.updateChatHistoryTitle(this.sessionId, updatedTitle);
         }
       }
+
+      
 
       // Update context if necessary
       if (this.context.length >= this.maxContext) {

@@ -93,7 +93,25 @@
               </div>
             </div>
             <div class="end__wrapper">
-              <button class="dark r" style="display: none;">Login</button>
+              <div class="icon__btn quota__info__wrapper">
+                <svg class="icon" style="rotate: -15deg;">
+                  <use href="/assets/image/svg/icons.svg#quote-icon" />
+                </svg>
+                <div class="quota__info__main" id="quota-info">
+                  <div class="info__block available">
+                    <span class="title">Available</span>
+                    <span class="number"></span>
+                  </div>
+                  <div class="info__block used">
+                    <span class="title">Used</span>
+                    <span class="number"></span>
+                  </div>
+                  <div class="info__block left">
+                    <span class="title">Left</span>
+                    <span class="number"></span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="scroll__container" id="content-scroll-container">
@@ -160,7 +178,8 @@
             <div class="window api" data-window="api">
               <form id="api-form">
                 <label for="host">Host</label>
-                <input class="validate invalid" type="url" name="host" placeholder="Host URL (e.g. http://localhost:11434)" required pattern="^http[s]?:\/\/.*$">
+                <input class="validate invalid" type="url" name="host"
+                  placeholder="Host URL (e.g. http://localhost:11434)" required pattern="^http[s]?:\/\/.*$">
                 <button class="dark submit-btn" type="submit">Save</button>
               </form>
             </div>
@@ -174,7 +193,7 @@
                 <button class="dark submit-btn" type="submit">Save</button>
               </form>
             </div>
-            <div class="window chat" data-window="chat" >
+            <div class="window chat" data-window="chat">
               <form id="chat-form">
                 <label>Max Context Length</label>
                 <input type="number" name="maxContextLength" min="1" max="100" placeholder="e.g. 20 ">
@@ -185,7 +204,7 @@
                 <button class="dark submit-btn" type="submit">Save</button>
               </form>
             </div>
-            <div class="window other" data-window="other" >
+            <div class="window other" data-window="other">
               <label>Export</label>
               <button class="export-settings lg wide">Export Settings</button>
               <label>Import</label>
@@ -197,16 +216,16 @@
 
 
       <div class="search__wrapper" id="search">
-          <div class="wrapper">
-            <div class="head">
-              <h4 class="heading">Search</h4>
-              <button class="close"></button>
-            </div>
-            <input class="search-input" type="search" name="search" placeholder="Search chat..">
-            <div class="result-wrapper">
-                
-            </div>
+        <div class="wrapper">
+          <div class="head">
+            <h4 class="heading">Search</h4>
+            <button class="close"></button>
           </div>
+          <input class="search-input" type="search" name="search" placeholder="Search chat..">
+          <div class="result-wrapper">
+
+          </div>
+        </div>
       </div>
     </div>
 
