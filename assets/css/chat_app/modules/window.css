@@ -228,14 +228,22 @@
                             flex-direction: column;
 
                             .preview__wrapper {
+                                display: flex;
+                                gap: var(--space);
+
+                                img {
+                                    max-width: 100%;
+                                    border-radius: var(--radius);
+                                }
 
                                 &:empty {
-                                 display: none;
+                                    display: none;
                                 }
                             }
 
                             .message__wrapper {
                                 display: flex;
+
                                 &:not(.editing) {
                                     justify-content: end;
 

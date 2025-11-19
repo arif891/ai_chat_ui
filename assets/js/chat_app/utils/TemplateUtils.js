@@ -74,4 +74,19 @@ export class TemplateUtils {
               </div>
             </div>`;
   }
+
+  static generatePreviewItems(items, type = 'image') {
+    let previewItems = '';
+    items.forEach((item, index) => {
+      switch (type) {
+        case 'image':
+          previewItems += `<img src="${item.url}" class="preview__item preview__item--image">`;
+          break;
+       case 'file':
+          previewItems += `<span class="preview__item preview__item--file">${item.name}</span>`;
+          break;
+      }
+     });
+    return previewItems;
+  }
 }
