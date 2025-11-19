@@ -36,7 +36,7 @@ export class ChatUI {
 
     this.editMode = null;
     this.activeHistoryItem = null;
-    this.attachedFile = null;
+    this.attachedFiles = [];
   }
 
   initializeElements() {
@@ -374,24 +374,46 @@ export class ChatUI {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    // Clear previous files
-    this.filePreviewContainer.innerHTML = '';
-    this.attachedFile = null;
+    // Add files to attachedFiles array
+    for (let i = 0; i < files.length; i++) {
+      this.attachedFiles.push(files[i]);
+    }
 
-    // Handle first file only
-    const file = files[0];
-    this.attachedFile = file;
-
-    const preview = this.createFilePreview(file);
-    this.filePreviewContainer.appendChild(preview);
+    // Render all previews
+    this.renderFilePreviews();
 
     // Reset file input
     this.fileInput.value = '';
   }
 
-  createFilePreview(file) {
+  renderFilePreviews() {
+    // Clear container
+    this.filePreviewContainer.innerHTML = '';
+
+    // Add preview for each file
+    this.attachedFiles.forEach((file, index) => {
+      const preview = this.createFilePreview(file, index);
+      this.filePreviewContainer.appendChild(preview);
+    });
+  }
+
+  createFilePreview(file, index) {
     const container = document.createElement('div');
     container.className = 'file-preview';
+    container.dataset.fileIndex = index;
+
+    // Check if image
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imagePreview = document.createElement('img');
+        imagePreview.className = 'file-preview__image';
+        imagePreview.src = e.target.result;
+        imagePreview.alt = file.name;
+        container.insertBefore(imagePreview, container.firstChild);
+      };
+      reader.readAsDataURL(file);
+    }
 
     const fileInfo = document.createElement('div');
     fileInfo.className = 'file-info';
@@ -408,24 +430,24 @@ export class ChatUI {
     removeButton.className = 'file-remove-btn';
     removeButton.textContent = '✕';
     removeButton.addEventListener('click', () => {
-      this.attachedFile = null;
-      this.filePreviewContainer.innerHTML = '';
+      this.attachedFiles.splice(index, 1);
+      this.renderFilePreviews();
     });
 
     fileInfo.appendChild(fileName);
     fileInfo.appendChild(fileSize);
-    fileInfo.appendChild(removeButton);
+    container.appendChild(removeButton);
     container.appendChild(fileInfo);
 
     return container;
   }
 
   getAttachedFile() {
-    return this.attachedFile;
+    return this.attachedFiles;
   }
 
   clearAttachedFile() {
-    this.attachedFile = null;
+    this.attachedFiles = [];
     this.filePreviewContainer.innerHTML = '';
   }
 }

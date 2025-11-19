@@ -161,53 +161,50 @@ class ChatApplication {
       let messageToSave = { role: 'user', content: userContent };
       let previewItemsHTML = '';
 
-      const attachedFile = this.ui.getAttachedFile();
-      if (attachedFile) {
+      const attachedFiles = this.ui.getAttachedFile();
+      if (attachedFiles && attachedFiles.length > 0) {
         // Prepare content array for API based on file type
         const contentArray = [];
 
-        if (FileUtils.isImageFile(attachedFile)) {
-          // Handle image file - pass File object directly
-          // Add text content first
-          if (userContent) {
-            contentArray.push({
-              type: 'text',
-              value: userContent,
-            });
-          }
-          
-          contentArray.push({
-            type: 'image',
-            value: attachedFile,
-          });
-          messageContent = contentArray;
-
-          // Generate preview for image - wait for file read to complete
-          const base64Image = await FileUtils.readFileAsBase64(attachedFile);
-          const previewItems = [{ url: base64Image }];
-          previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'image');
-        } else if (FileUtils.isTextFile(attachedFile)) {
-          // Handle text file - combine filename and content with userContent as single text item
-          const fileContent = await FileUtils.readFileAsText(attachedFile);
-          const combinedContent = `FILE ATTACHED: ${attachedFile.name}
----FILE CONTENT START---
-${fileContent}
----FILE CONTENT END---
-
-USER MESSAGE:
-${userContent}`;
-          
+        // Add text content first
+        if (userContent) {
           contentArray.push({
             type: 'text',
-            value: combinedContent,
+            value: userContent,
           });
-          messageContent = contentArray;
-
-          // Generate preview for text file
-          const previewItems = [{ name: attachedFile.name }];
-          previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'file');
         }
 
+        // Process each file
+        for (const attachedFile of attachedFiles) {
+          if (FileUtils.isImageFile(attachedFile)) {
+            // Handle image file - pass File object directly
+            contentArray.push({
+              type: 'image',
+              value: attachedFile,
+            });
+
+            // Generate preview for image
+            const base64Image = await FileUtils.readFileAsBase64(attachedFile);
+            const previewItems = [{ url: base64Image }];
+            previewItemsHTML += TemplateUtils.generatePreviewItems(previewItems, 'image');
+          } else if (FileUtils.isTextFile(attachedFile)) {
+            // Handle text file - combine filename and content with userContent as single text item
+            const fileContent = await FileUtils.readFileAsText(attachedFile);
+            contentArray.push({
+              type: 'text',
+              value: `FILE ATTACHED: ${attachedFile.name}
+---FILE CONTENT START---
+${fileContent}
+---FILE CONTENT END---`,
+            });
+
+            // Generate preview for text file
+            const previewItems = [{ name: attachedFile.name }];
+            previewItemsHTML += TemplateUtils.generatePreviewItems(previewItems, 'file');
+          }
+        }
+
+        messageContent = contentArray;
         messageToSave = { role: 'user', content: messageContent };
         this.ui.clearAttachedFile();
       }
