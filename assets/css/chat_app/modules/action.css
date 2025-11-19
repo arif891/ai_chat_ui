@@ -28,6 +28,13 @@
                     }
                 }
 
+                .attachment__wrapper {
+
+                    &:empty {
+                        display: none;
+                    }
+                }
+
                 .chat__textarea {
                     --min-line: 1;
                     --max-line: 8;

@@ -17,6 +17,9 @@ export class ChatUI {
       modelMenu: '#model-menu',
       scrollButton: '#scroll-button',
       sidebarStateName: 'chat-sidebar-open',
+      attachFileButton: '#chat-add-file',
+      fileInput: '#file-input',
+      filePreviewContainer: '#file-preview-container',
       backdrop: '.chat-backdrop',
       ...options
     };
@@ -33,6 +36,7 @@ export class ChatUI {
 
     this.editMode = null;
     this.activeHistoryItem = null;
+    this.attachedFile = null;
   }
 
   initializeElements() {
@@ -45,6 +49,9 @@ export class ChatUI {
     this.contentContainer = DOMUtils.findElement(this.root, this.uiOptions.contentContainer);
     this.modelMenu = DOMUtils.findElement(this.root, this.uiOptions.modelMenu);
     this.scrollButton = DOMUtils.findElement(this.root, this.uiOptions.scrollButton);
+    this.attachFileButton = DOMUtils.findElement(this.root, this.uiOptions.attachFileButton);
+    this.filePreviewContainer = DOMUtils.findElement(this.root, this.uiOptions.filePreviewContainer);
+    this.fileInput = DOMUtils.findElement(this.root, this.uiOptions.fileInput);
   }
 
   setActiveHistoryItem(historyItem) {
