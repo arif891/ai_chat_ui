@@ -231,16 +231,17 @@
                                 display: flex;
                                 gap: var(--space);
                                 flex-wrap: wrap;
+                                justify-content: end;
 
                                 .preview__item {
-                                    &--image {
-                                        max-width: 100%;
+                                    &.image {
+                                        max-width: 80%;
                                         border-radius: var(--radius);
-                                        max-height: 300px;
+                                        max-height: 60vh;
                                         object-fit: cover;
                                     }
 
-                                    &--file {
+                                    &.file {
                                         display: inline-block;
                                         padding: 0.5rem 1rem;
                                         background-color: var(--surface-2-color);
@@ -248,6 +249,10 @@
                                         font-size: 0.875rem;
                                         border: 1px solid var(--border-color);
                                         word-break: break-word;
+
+                                        &::before {
+                                            content: 'Added: ';
+                                        }
                                     }
                                 }
 

@@ -80,10 +80,10 @@ export class TemplateUtils {
     items.forEach((item, index) => {
       switch (type) {
         case 'image':
-          previewItems += `<img src="${item.url}" class="preview__item preview__item--image">`;
+          previewItems += `<img src="${item.url}" class="preview__item image">`;
           break;
        case 'file':
-          previewItems += `<span class="preview__item preview__item--file">${item.name}</span>`;
+          previewItems += `<span class="preview__item file">${item.name}</span>`;
           break;
       }
      });
