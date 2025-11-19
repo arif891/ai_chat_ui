@@ -375,4 +375,4 @@ class ChatApplication {
 }
 
 // Initialize the application
-const chatApp = new ChatApplication();
+new ChatApplication();
