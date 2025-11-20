@@ -324,4 +324,4 @@ If you found this project helpful, please consider:
 - ⭐ Starring the repository
 - 🐛 Reporting issues
 - 📝 Contributing improvements
-- 📢 Sharing with others
+- 📢 Sharing with other 
