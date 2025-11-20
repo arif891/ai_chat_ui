@@ -12,12 +12,7 @@ export const CONFIG = {
         offline: {
             name: 'offline-cache',
             version: 1,
-            urls: [
-                '/assets/css/base.css',
-                '/assets/css/pages/chat_app.css',
-                '/assets/js/base.js',
-                '/assets/js/pages/chat_app.js'
-            ],
+            urls: [],
             priority: 'reliability'
         },
         static: {
