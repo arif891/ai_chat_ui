@@ -9,6 +9,7 @@
 /* Components */
 @import url(components/button/button.css);
 @import url(components/form/form.css);
+@import url(components/dialog/dialog.css);
 
 /* Other */
 @import url(others/icon/icon.css);
