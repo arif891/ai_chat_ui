@@ -4,6 +4,8 @@ A modern, feature-rich Progressive Web App (PWA) for seamless AI conversations u
 
 ![App Screenshot](.github/screenshot.avif)
 
+ > This is a rough prototype and may contain bugs. The code is not organized or optimized. I currently can't properly understand what I wrote before. However, it works for now, and I will improve it later. Sorry for the inconvenience. The README was written by AI.
+
 ## ✨ Key Features
 
 ### Core Functionality
@@ -55,10 +57,11 @@ A modern, feature-rich Progressive Web App (PWA) for seamless AI conversations u
 - **Network:** Unlimited or unmetered connection recommended
 
 ### Enable Chrome AI API
-1. Open `chrome://flags/`
-2. Search for **"Prompt API for Gemini Nano"** and set to "Enabled"
-3. Search for **"Optimization guide on device model"** and set to "Enabled"
-4. Restart Chrome
+1. Open `chrome://flags/#prompt-api-for-gemini-nano-multimodal-input`
+2. Set **"Prompt API for Gemini Nano with Multimodal Input"** to "Enabled"
+3. Restart Chrome
+   
+   > Chrome Dev don't require this flag as the API is enabled by default.
 
 ## 🚀 Quick Start
 
