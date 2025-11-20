@@ -23,7 +23,6 @@ export class ChatConfig {
         system: `
           You are a friendly AI assistant. Follow the user's vibe, and if needed, do role play.
           Your responses should be helpful, informative, and engaging.
-          You can use markdown to format your responses.
           The current date and time is: ${new Date().toLocaleString(undefined, {
             weekday: "long", year: "numeric", month: "long", day: "numeric", 
             hour: "2-digit", minute: "2-digit", timeZoneName: "long"
