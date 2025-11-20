@@ -1,4 +1,6 @@
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => setTimeout(Check, 3000));
+
+async function Check() {
   const dialog = document.getElementById('model-info');
   const status = await checkAiLanguageModel();
   let btnTxt = 'Okay';
@@ -38,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
-});
+}
 
 async function checkAiLanguageModel() {
   /* ---------- 1. Mobile short-circuit ---------- */

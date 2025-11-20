@@ -57,14 +57,16 @@ class ChatApplication {
       await this.displayChatHistory(sessionIdFromUrl);
     }
 
+    // Delay AI initialization to improve perceived load time
+    setTimeout( async () => {
     const aiInitialized = await this.chatService.initialize();
     if (!aiInitialized) {
       this.ui.addSystemMessage('Chrome AI is not available. Please try to refresh the page.');
-      console.warn('Could not initialize window.ai. The app may not function correctly.');
+      console.warn('Could not initialize Built-in AI. The app may not function correctly.');
     }
     await this.loadModels();
     this.updateTokenUsage();
-
+    }, 2500);
   }
 
   registerEvents() {
@@ -451,4 +453,5 @@ ${fileContent}
 }
 
 // Initialize the application
+
 new ChatApplication();
