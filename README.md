@@ -67,7 +67,7 @@ A modern, feature-rich Progressive Web App (PWA) for seamless AI conversations u
 
 ### Installation
 
-1. Open [this](https://aichat-blush-seven.vercel.app/) url.
+1. Open [this](https://chrome-ai-ui.vercel.app/) url.
 2. **Install as PWA:**
    - Click the install button in the address bar
    - Or use Chrome menu → "Install app" 
