@@ -1,6 +1,6 @@
-import { CacheManager } from './layx/others/pwa/sw/modules/cache_manager.js';
-import { RequestHandler } from './layx/others/pwa/sw/handlers/request_handler.js';
-import { CONFIG } from './layx/others/pwa/sw/config.js';
+import { CacheManager } from './modules/cache_manager.js';
+import { RequestHandler } from './handlers/request_handler.js';
+import { CONFIG } from './config.js';
 
 class ServiceWorkerApp {
     constructor() {

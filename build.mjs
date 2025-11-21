@@ -2,9 +2,27 @@ import * as esbuild from 'esbuild'
 import { watch } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import fs from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Custom plugin to output sw.js to root
+const swRootPlugin = {
+  name: 'sw-root',
+  setup(build) {
+    build.onEnd(async (result) => {
+      const swPath = path.join(__dirname, 'dist', 'layx','others','pwa','sw', 'sw.bundle.js')
+      const rootPath = path.join(__dirname, 'sw.bundle.js')
+      
+      // Check if sw.bundle.js exists and copy to root
+      if (fs.existsSync(swPath)) {
+        fs.copyFileSync(swPath, rootPath)
+        console.log('📍 Service Worker copied to dist/sw.js')
+      }
+    })
+  }
+}
 
 // Build configuration
 const buildConfig = {
@@ -14,7 +32,7 @@ const buildConfig = {
     'layx/layx.js',
     'layx/layx.css',
     'assets/css/chat_app/main.css',
-    'sw.js'
+    'layx/others/pwa/sw/sw.js'
   ],
   
   // Output configuration
@@ -43,6 +61,7 @@ const buildConfig = {
   
   // Other options
   logLevel: 'info',
+  plugins: [swRootPlugin],
 }
 
 // Check if watch mode or dev mode is enabled

@@ -9,12 +9,16 @@
     <title>Chrome Built-in AI Chat UI</title>
 
     <!-- Production: Use bundled CSS -->
-    <link rel="stylesheet" href="/dist/layx/layx.bundle.css">
-    <link rel="stylesheet" href="/dist/assets/css/chat_app/main.bundle.css">
+    <!--pro-start-->
+    <!-- <link rel="stylesheet" href="/dist/layx/layx.bundle.css">
+    <link rel="stylesheet" href="/dist/assets/css/chat_app/main.bundle.css"> -->
+    <!--pro-end-->
     
     <!-- Development: Uncomment to use original CSS files for debugging -->
-    <!-- <link rel="stylesheet" href="/layx/layx.css">
-    <link rel="stylesheet" href="/assets/css/chat_app/main.css"> -->
+    <!--dev-start-->
+    <link rel="stylesheet" href="/layx/layx.css">
+    <link rel="stylesheet" href="/assets/css/chat_app/main.css">
+    <!--dev-end-->
 
     <link rel="manifest" href="layx/others/pwa/assets/app.webmanifest">
     <link rel="shortcut icon" href="/assets/brand/logo.svg" type="image/svg">
@@ -237,17 +241,23 @@
     <dialog class="modern __dialog middle" id="model-info"></dialog>
 
     <!-- Production: Use bundled versions -->
-    <script src="/dist/layx/layx.bundle.js" type="module"></script>
-    <script src="/dist/assets/js/chat_app/main.bundle.js" type="module"></script>
+    <!--pro-start-->
+    <!-- <script src="/dist/layx/layx.bundle.js" type="module"></script>
+    <script src="/dist/assets/js/chat_app/main.bundle.js" type="module"></script> -->
+    <!--pro-end-->
     
     <!-- Development: Uncomment to use original files for debugging -->
-<!--     <script src="/layx/layx.js" type="module"></script>
-    <script defer src="/assets/js/chat_app/main.js" type="module"></script> -->
+    <!--dev-start-->
+    <script src="/layx/layx.js" type="module"></script>
+    <script defer src="/assets/js/chat_app/main.js" type="module"></script>
+    <!--dev-end-->
 
     <script defer src="/assets/js/check.js"></script>
 
     <!-- Should commented durning development -->
+    <!--pro-start-->
     <!-- <script src="/layx/others/pwa/sw/register.js"></script> -->
+     <!--pro-end-->
 
   </body>
 
