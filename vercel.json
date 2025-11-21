@@ -1,5 +1,4 @@
 {
-    "outputDirectory": ".",
     "git": {
         "deploymentEnabled": {
             "main": false
