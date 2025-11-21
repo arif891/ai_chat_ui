@@ -1,0 +1,15 @@
+node_modules
+.git
+.gitignore
+README.md
+BUILD.md
+QUICK_START.md
+.env
+.env.local
+*.log
+.DS_Store
+src
+assets
+layx
+pages
+build.mjs

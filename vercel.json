@@ -1,4 +1,7 @@
 {
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "framework": "static",
     "git": {
         "deploymentEnabled": {
             "main": false
