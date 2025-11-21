@@ -8,6 +8,7 @@ import { TemplateUtils } from './utils/TemplateUtils.js';
 import { ModelManager } from './core/ModelManager.js';
 import { SettingsManager } from './core/SettingsManager.js';
 import { SearchManager } from './core/SearchManager.js';
+import { ContextManager } from './core/ContextManager.js';
 
 class ChatApplication {
   constructor(config = {}) {
@@ -21,8 +22,8 @@ class ChatApplication {
     this.host = this.settingsManager.getHost();
     this.chatService = new ChatService(this.host);
     this.sessionId = 0;
-    this.context = [];
-    this.maxContext = 20;
+    this.maxContext = 25;
+    this.contextManager = new ContextManager(this.maxContext, 'balanced'); // 'recent', 'balanced', 'important', 'sliding'
     this.aiOptions = {};
     this.systemPrompt = this.config.ai.system;
     this.model = '';
@@ -30,6 +31,11 @@ class ChatApplication {
 
     this.initialize();
     this.registerEvents();
+  }
+
+  // Getter for backward compatibility
+  get context() {
+    return this.contextManager.getContext();
   }
 
   async initialize() {
@@ -259,7 +265,7 @@ ${fileContent}
       // Save the user message to the DB and update the conversation context (only if not regenerating)
       if (!isRegenerating) {
         await this.dbManager.addMessage(this.sessionId, messageToSave);
-        this.context.push({ role: 'user', content: messageContent });
+        this.contextManager.addMessage({ role: 'user', content: messageContent });
       }
       // Note: During regenerate, refreshContext already set up the correct context above
 
@@ -290,7 +296,7 @@ ${fileContent}
 
       MarkdownUtils.highlightCode();
       await this.dbManager.addMessage(this.sessionId, { role: 'assistant', content: assistantContent });
-      this.context.push({ role: 'assistant', content: assistantContent });
+      this.contextManager.addMessage({ role: 'assistant', content: assistantContent });
 
       this.ui.scrollToBottom();
 
@@ -323,7 +329,7 @@ ${fileContent}
     this.ui.clearChatHistory();
     this.ui.textarea.value = '';
     DOMUtils.removeAttribute(this.ui.root, 'data-session-id');
-    this.context = [];
+    this.contextManager.clearContext();
     this.sessionId = 0;
     this.ui.clearActiveHistoryItem();
 
@@ -437,16 +443,9 @@ ${fileContent}
     }
   }
 
-  async refreshContext(messages, maxCount = 10) {
+  async refreshContext(messages, maxCount = null) {
     try {
-      if (messages.length > maxCount) {
-        const halfMax = Math.floor(maxCount / 2);
-        const firstHalf = messages.filter(msg => msg.role === 'user').slice(0, halfMax);
-        const lastHalf = messages.slice(-halfMax);
-        this.context = [...firstHalf, ...lastHalf];
-      } else if (messages.length) {
-        this.context = messages;
-      }
+      this.contextManager.updateContext(messages, maxCount || this.maxContext);
     } catch (error) {
       console.error('Error updating context:', error);
     }
