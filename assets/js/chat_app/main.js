@@ -124,25 +124,36 @@ class ChatApplication {
     this.ui.root.addEventListener('regenerate-message', async (e) => {
       const { messageBlock, messageIndex } = e.detail;
 
-      // Get the last user message
-      const userBlock = this.ui.contentContainer.children[messageIndex - 1];
-      const userContent = userBlock.querySelector('.message').textContent;
+      // Get the original user message from database (preserves files/images)
+      const conversationInfo = await this.dbManager.db.get(this.config.stores.conversations.name, this.sessionId);
+      const originalUserMessage = conversationInfo.messages[messageIndex - 1];
 
-      this.ui.removeBlocksAfter(messageIndex - 1); // Remove from the user message
+      // Remove only the assistant response block (messageIndex)
+      if (messageBlock) {
+        DOMUtils.removeElement(messageBlock);
+      }
+
+      // Update database - remove assistant message that follows the user message
+      conversationInfo.messages = conversationInfo.messages.slice(0, messageIndex);
+      await this.dbManager.db.put(this.config.stores.conversations.name, conversationInfo);
 
       // Refresh context to exclude removed messages
-      const conversationInfo = await this.dbManager.db.get(this.config.stores.conversations.name, this.sessionId);
-      const updatedMessages = conversationInfo.messages.slice(0, [messageIndex - 1]);
+      const updatedMessages = conversationInfo.messages.slice(0, messageIndex);
       await this.refreshContext(updatedMessages, this.maxContext);
 
-      // Process the user message again
-      await this.processChat(userContent);
+      // Process chat to generate new response (without re-rendering the user message)
+      await this.processChat(originalUserMessage.content, true);
     });
   }
 
-  async processChat(editedContent = null, files = null) {
+  async processChat(editedContent = null, isRegenerating = false) {
     try {
-      let userContent = editedContent || this.ui.textarea.value.trim();
+      // Handle array content from regenerate (contains files/images)
+      let isRegeneratingWithFiles = Array.isArray(editedContent);
+      let userContent = isRegeneratingWithFiles 
+        ? editedContent.find(item => item.type === 'text')?.value || ''
+        : (editedContent || this.ui.textarea.value.trim());
+      
       if (!userContent && !this.ui.getAttachedFile() || DOMUtils.hasClass(this.ui.root, 'generating')) return;
 
       this.ui.textarea.value = '';
@@ -158,67 +169,99 @@ class ChatApplication {
 
       DOMUtils.removeClass(this.ui.root, 'initial');
 
-      // Build message content with files if attached
+      // Build message content with files if attached or if regenerating with files
       let messageContent = userContent;
       let messageToSave = { role: 'user', content: userContent };
       let previewItemsHTML = '';
+      let shouldRenderUserMessage = !isRegenerating; // Don't re-render user message during regenerate
 
-      const attachedFiles = this.ui.getAttachedFile();
-      if (attachedFiles && attachedFiles.length > 0) {
-        // Prepare content array for API based on file type
-        const contentArray = [];
-
-        // Add text content first
-        if (userContent) {
-          contentArray.push({
-            type: 'text',
-            value: userContent,
-          });
+      if (isRegeneratingWithFiles) {
+        // Use the array content directly from regenerate
+        messageContent = editedContent;
+        messageToSave = { role: 'user', content: messageContent };
+        
+        // Generate preview HTML from the array content
+        const imageItem = editedContent.find(item => item.type === 'image');
+        if (imageItem && imageItem.value instanceof Blob) {
+          const base64Image = await FileUtils.readFileAsBase64(imageItem.value);
+          const previewItems = [{ url: base64Image }];
+          previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'image');
+        } else {
+          const textItem = editedContent.find(item => 
+            item.type === 'text' && item.value.includes('FILE ATTACHED:')
+          );
+          if (textItem) {
+            const match = textItem.value.match(/FILE ATTACHED: ([^\n]+)/);
+            if (match) {
+              const previewItems = [{ name: match[1] }];
+              previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'file');
+            }
+          }
         }
+      } else {
+        const attachedFiles = this.ui.getAttachedFile();
+        if (attachedFiles && attachedFiles.length > 0) {
+          // Prepare content array for API based on file type
+          const contentArray = [];
 
-        // Process each file
-        for (const attachedFile of attachedFiles) {
-          if (FileUtils.isImageFile(attachedFile)) {
-            // Handle image file - pass File object directly
-            contentArray.push({
-              type: 'image',
-              value: attachedFile,
-            });
-
-            // Generate preview for image
-            const base64Image = await FileUtils.readFileAsBase64(attachedFile);
-            const previewItems = [{ url: base64Image }];
-            previewItemsHTML += TemplateUtils.generatePreviewItems(previewItems, 'image');
-          } else if (FileUtils.isTextFile(attachedFile)) {
-            // Handle text file - combine filename and content with userContent as single text item
-            const fileContent = await FileUtils.readFileAsText(attachedFile);
+          // Add text content first
+          if (userContent) {
             contentArray.push({
               type: 'text',
-              value: `FILE ATTACHED: ${attachedFile.name}
+              value: userContent,
+            });
+          }
+
+          // Process each file
+          for (const attachedFile of attachedFiles) {
+            if (FileUtils.isImageFile(attachedFile)) {
+              // Handle image file - pass File object directly
+              contentArray.push({
+                type: 'image',
+                value: attachedFile,
+              });
+
+              // Generate preview for image
+              const base64Image = await FileUtils.readFileAsBase64(attachedFile);
+              const previewItems = [{ url: base64Image }];
+              previewItemsHTML += TemplateUtils.generatePreviewItems(previewItems, 'image');
+            } else if (FileUtils.isTextFile(attachedFile)) {
+              // Handle text file - combine filename and content with userContent as single text item
+              const fileContent = await FileUtils.readFileAsText(attachedFile);
+              contentArray.push({
+                type: 'text',
+                value: `FILE ATTACHED: ${attachedFile.name}
 ---FILE CONTENT START---
 ${fileContent}
 ---FILE CONTENT END---`,
-            });
+              });
 
-            // Generate preview for text file
-            const previewItems = [{ name: attachedFile.name }];
-            previewItemsHTML += TemplateUtils.generatePreviewItems(previewItems, 'file');
+              // Generate preview for text file
+              const previewItems = [{ name: attachedFile.name }];
+              previewItemsHTML += TemplateUtils.generatePreviewItems(previewItems, 'file');
+            }
           }
-        }
 
-        messageContent = contentArray;
-        messageToSave = { role: 'user', content: messageContent };
-        this.ui.clearAttachedFile();
+          messageContent = contentArray;
+          messageToSave = { role: 'user', content: messageContent };
+          this.ui.clearAttachedFile();
+        }
       }
 
       // Render the user message with file preview and add a placeholder for the assistant
-      this.ui.renderMessage(userContent, 'user', previewItemsHTML);
+      // Skip user message rendering during regenerate (message already in DOM)
+      if (shouldRenderUserMessage) {
+        this.ui.renderMessage(userContent, 'user', previewItemsHTML);
+      }
       this.ui.renderMessage('', 'assistant');
       this.ui.scrollToBottom();
 
-      // Save the user message to the DB and update the conversation context
-      await this.dbManager.addMessage(this.sessionId, messageToSave);
-      this.context.push({ role: 'user', content: messageContent });
+      // Save the user message to the DB and update the conversation context (only if not regenerating)
+      if (!isRegenerating) {
+        await this.dbManager.addMessage(this.sessionId, messageToSave);
+        this.context.push({ role: 'user', content: messageContent });
+      }
+      // Note: During regenerate, refreshContext already set up the correct context above
 
       // Get the assistant response element for streaming updates
       const lastAssistantBlock = this.ui.contentContainer.querySelector(
@@ -318,18 +361,20 @@ ${fileContent}
           // Generate preview items if message has array content (with files)
           if (Array.isArray(message.content)) {
             const imageItem = message.content.find(item => item.type === 'image');
-            const fileNameMatch = message.content.find(item =>
-              item.type === 'text' && item.value.includes('[File:')
+            const textItemWithFile = message.content.find(item =>
+              item.type === 'text' && item.value.includes('FILE ATTACHED:')
             );
 
-            if (imageItem && imageItem.value instanceof Blob) {
-              // For blob/file objects, convert to data URL
-              const base64Image = await FileUtils.readFileAsBase64(imageItem.value);
-              const previewItems = [{ url: base64Image }];
-              previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'image');
-            } else if (fileNameMatch) {
-              // Extract filename from text
-              const match = fileNameMatch.value.match(/\[File: ([^\]]+)\]/);
+            if (imageItem) {
+              // For image objects, convert to data URL if needed
+              if (imageItem.value instanceof Blob) {
+                const base64Image = await FileUtils.readFileAsBase64(imageItem.value);
+                const previewItems = [{ url: base64Image }];
+                previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'image');
+              }
+            } else if (textItemWithFile) {
+              // Extract filename from FILE ATTACHED pattern
+              const match = textItemWithFile.value.match(/FILE ATTACHED: ([^\n]+)/);
               if (match) {
                 const previewItems = [{ name: match[1] }];
                 previewItemsHTML = TemplateUtils.generatePreviewItems(previewItems, 'file');
@@ -337,10 +382,17 @@ ${fileContent}
             }
           }
 
+          // Extract text content for rendering
+          let displayContent = message.content;
+          if (Array.isArray(message.content)) {
+            const textItem = message.content.find(item => item.type === 'text');
+            displayContent = textItem ? textItem.value : '';
+          }
+
           if (message.role === 'assistant') {
-            this.ui.renderMessage(MarkdownUtils.parseMarkdown(message.content), message.role);
+            this.ui.renderMessage(MarkdownUtils.parseMarkdown(displayContent), message.role);
           } else {
-            this.ui.renderMessage(message.content, message.role, previewItemsHTML);
+            this.ui.renderMessage(displayContent, message.role, previewItemsHTML);
           }
         }
         this.ui.scrollToBottom();
