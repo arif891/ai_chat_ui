@@ -56,18 +56,12 @@ A modern, feature-rich Progressive Web App (PWA) for seamless AI conversations u
   - **CPU Only:** 16GB+ RAM and 4+ CPU cores
 - **Network:** Unlimited or unmetered connection recommended
 
-### Enable Chrome AI API
-1. Open `chrome://flags/#prompt-api-for-gemini-nano-multimodal-input`
-2. Set **"Prompt API for Gemini Nano with Multimodal Input"** to "Enabled"
-3. Restart Chrome
-   
-   > Chrome Dev don't require this flag as the API is enabled by default.
 
 ## 🚀 Quick Start
 
 ### Installation
 
-1. Open [this](https://chrome-ai-app.vercel.app/) url.
+1. Open [This](https://chrome-ai-app.vercel.app/) url.
 2. **Install as PWA:**
    - Click the install button in the address bar
    - Or use Chrome menu → "Install app" 
